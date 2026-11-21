@@ -53,6 +53,56 @@ construction: `out/data.js` is generated from the same board in
 the same run, so the 178 rows, the ranking order and the implied
 values it shows are the ones `board.json` carries.
 
+## How to verify the board
+
+You do not have to trust this README to check the board: every
+number on it can be rebuilt from the sealed snapshot and compared
+against the files committed here, with no network access.
+
+1. **Re-run the build.** From the repository root, run:
+
+   ```sh
+   mkdir -p out
+   MAKEFUN_OUTPUT_DIR=out node main.ts --input ../token-radar-01-kit/input/snapshot.json
+   ```
+
+   This is the same command the Reproducibility section gives.
+2. **Confirm the outputs are unchanged.** After the rebuild,
+   compare the regenerated files with the committed ones:
+
+   ```sh
+   git status --short
+   git diff --stat
+   sha256sum out/board.json out/data.js out/dossier.json
+   ```
+
+   A clean rebuild shows no changes: `git status` is empty,
+   `git diff` shows nothing, and the SHA-256 hashes of the
+   three files match the ones from before the rebuild. If any
+   differ, stop and report the diff; do not commit the output.
+
+3. **Confirm the dashboard reads the same run.** The dashboard
+   does not fetch anything: it reads `data.js`, written from the
+   same board in the same run as `board.json`. Open the rebuilt
+   `out/dashboard/index.html` and check its table has the same
+   178 rows, in the same order, with the same implied values.
+4. **Confirm the 178 rows and the watchlist are present.**
+   Count the rows in `out/board.json`: ranks 1 to 178, no gaps,
+   no duplicates, implied values never rising with rank. Then
+   check every one of the 40 watchlist slugs is on the board:
+   the watchlist is the $50M TVL floor, and the board is the
+   whole watchlist plus the eligible pre-token protocols below
+   that floor, by TVL.
+
+5. **Confirm the model multiple is fitted, not chosen.** The
+   multiple comes from the snapshot's own live-token peers:
+   for each protocol that already trades and carries a market
+   cap, divide its market cap by its TVL, and take the median
+   of those ratios — x0.21 overall on 128 peers, or the category
+   median where that category has at least eight such peers.
+   The dashboard reports the two held-out halves beside the
+   whole-peer median, so the multiple is visibly stable.
+
 ## How the ranking works
 
 The model is `radar-2`, in `lib/model.ts`, and the dashboard recomputes it in the page so the numbers it shows are the numbers `board.json` carries.
