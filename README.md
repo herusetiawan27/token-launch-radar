@@ -15,6 +15,44 @@ MAKEFUN_OUTPUT_DIR=out node main.ts --input path/to/snapshot.json
 
 That reads the snapshot, scores every protocol, and writes `out/board.json`, `out/data.js`, `out/dashboard/` and `out/dossier.json`. Node 22 or later, standard library only, no network.
 
+## Reproducibility
+
+Anyone can rebuild every generated file in this repo from the same
+input and get byte-identical outputs. The build is deterministic:
+it reads one sealed snapshot, uses only the Node standard library,
+and makes no network calls.
+
+Run this from the repository root, with the sealed DefiLlama
+snapshot at the path given to `--input`:
+
+```sh
+mkdir -p out
+MAKEFUN_OUTPUT_DIR=out node main.ts --input ../token-radar-01-kit/input/snapshot.json
+```
+
+- **Node version:** Node 22 or later. No packages to install and
+  no build step: `main.ts` runs directly, standard library only.
+- **What it reads:** the sealed DefiLlama snapshot
+  (`input/snapshot.json` in the competition kit) — 758 protocols
+  with TVL, chains, categories, listing dates and seven-day
+  changes. Nothing else: no live prices, no network, no other
+  environment variables besides `MAKEFUN_OUTPUT_DIR`.
+- **What it writes:** `out/board.json` (the 178-row ranked board),
+  `out/data.js` (the same board, as the dashboard's data file),
+  `out/dashboard/` (`index.html`, `app.css`, `app.js`),
+  `out/screenshots/` and `out/dossier.json` (the entry dossier).
+
+To verify, re-run the build command above, then compare the
+regenerated outputs against the committed ones (`git status
+--short` and `git diff --stat`). A clean rebuild shows no changes:
+`git status` is empty and the SHA-256 hashes of `out/board.json`,
+`out/data.js` and `out/dossier.json` are unchanged. If any of
+those files differ, do not commit the differing output; report
+the diff instead. The dashboard matches `board.json` by
+construction: `out/data.js` is generated from the same board in
+the same run, so the 178 rows, the ranking order and the implied
+values it shows are the ones `board.json` carries.
+
 ## How the ranking works
 
 The model is `radar-2`, in `lib/model.ts`, and the dashboard recomputes it in the page so the numbers it shows are the numbers `board.json` carries.
